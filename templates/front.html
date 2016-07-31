@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="error">
+{{error}}
+</div>
+	{% for article in articles %}
+		{{article.renderpost(user) | safe}}
+		{{article.rendercomment(user) | safe}}
+	{% endfor %}
+{% endblock %}

@@ -1,0 +1,22 @@
+<div class="comment">
+
+	<div class="comment-content">
+		{{comment.content | safe}}
+	</div>
+
+	{% if user %}
+		{% if user.get_id() == comment.userid %}
+		  	<form method="post">
+		  		<input type="submit" name="commentdelete" value="delete">
+		  		<input type="submit" name="commentupdate" value="update">
+		  		<input type = "hidden" name = "commentid" value = "{{comment.get_id()}}">
+		  	</form>
+	  	{% endif %}
+  	{% endif %}
+  	
+	<div class="comment-heading">
+		<div class="comment-info">
+			{{comment.created.strftime("%b %d, %Y")}} by {{comment.getUsername()}}
+		</div>
+	</div>
+</div>

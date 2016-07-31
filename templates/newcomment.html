@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+
+{% block content %}
+<form method="post">
+	<textarea class="comment" name ="comment">{{content}}</textarea>
+	<div class="error">{{error}}</div>
+	<input type="submit">
+	<input type = "hidden" name = "postid" value = "{{comment_id}}">
+</form>
+<br>
+
+{% endblock %}

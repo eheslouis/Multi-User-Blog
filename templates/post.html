@@ -1,0 +1,56 @@
+<div class="post">
+	<div class="post-heading">
+		<a href="{{article.get_id()}}">
+			<div class="post-title">
+				{{article.subject}}
+			</div>
+		</a>
+		{% if user %}
+			{% if user.get_id() != article.userid %}
+				<form method="post">
+					{% if like %}
+						<input type="submit" class="like-button active" name="like" value = " ">
+					{% else %}
+						<input type="submit" class="like-button" name="like" value = " ">
+					{% endif %}
+					{% if dislike %}
+						<input type="submit" class="dislike-button active" name="dislike" value = " ">
+					{% else %}
+						<input type="submit" class="dislike-button" name="dislike" value = " ">
+					{% endif %}
+		  			<input type = "hidden" name = "postid" value = "{{article.get_id()}}">
+				</form>
+			{% endif %}
+		{% endif %}
+
+		<div class="post-date">
+			{{article.created.strftime("%b %d, %Y")}}
+		</div>
+	</div>
+
+	<div class="post-content">
+		{{article.content | safe}}
+		<div class="post-writter">
+			by {{article.getUsername()}}
+		</div>
+	</div>
+
+	{% if user %}
+		{% if user.get_id() == article.userid %}
+		  	<form method="post">
+		  		<input type="submit" name="delete" value="delete">
+		  		<input type="submit" name="update" value="update">
+		  		<input type = "hidden" name = "postid" value = "{{article.get_id()}}">
+		  	</form>
+	  	{% endif %}
+  	{% endif %}
+</div>
+<br>
+{% if user %}
+	<form method="post">
+		<textarea class="comment" name ="comment"></textarea>
+		<input type="submit">
+		<input type = "hidden" name = "postid" value = "{{article.get_id()}}">
+	</form>
+{% endif %}
+<br>	
