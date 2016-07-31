@@ -160,10 +160,10 @@ class BlogHandler(Handler):
 			commentdb.put()
 			time.sleep(0.1)
 			self.redirect("/")
-		elif submit == 'commentupdate':
+		elif commentupdate:
 			#update comment
 			self.redirect("/"+comment_id+"/editComment")
-		elif submit == 'commentdelete':
+		elif commentdelete:
 			#delete comment
 			db.delete(Comment.get_by_id(int(comment_id)).key())
 			time.sleep(0.1)

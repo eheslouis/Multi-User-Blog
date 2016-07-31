@@ -17,3 +17,4 @@ There you can:
 * update or delete your own post
 * write comments
 * update or delete your own comments
+* like or dislike a post
