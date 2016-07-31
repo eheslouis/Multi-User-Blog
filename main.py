@@ -111,8 +111,7 @@ class BlogHandler(Handler):
 		self.write_form()
 
 	def post(self, post_id = ""):
-		delete = self.request.get('delete')
-		update = self.request.get('update')
+		submit = self.request.get('submit')
 		like = self.request.get('like')
 		dislike = self.request.get('dislike')
 		post_id = self.request.get('postid')
@@ -120,18 +119,21 @@ class BlogHandler(Handler):
 		comment_id = self.request.get('commentid')
 		commentdelete = self.request.get('commentdelete')
 		commentupdate = self.request.get('commentupdate')
-		if delete:
+
+		if submit == 'delete':
 			#delete article
 			db.delete(Article.get_by_id(int(post_id)).key())
 			time.sleep(0.1)
 			self.redirect("/")
-		elif update:
+		elif submit == 'update':
 			#update article
 			self.redirect('/'+ post_id+'/editPost')
 		elif like:
+			#like article
 			article = Article.get_by_id(int(post_id))
 			if not (str(self.user.get_id()) in article.like):
 				article.like.append(str(self.user.get_id()))
+				#remove dislike if user previously dislike article
 				if (str(self.user.get_id()) in article.dislike):
 					article.dislike.remove(str(self.user.get_id()))
 				article.put()
@@ -140,9 +142,11 @@ class BlogHandler(Handler):
 			else:
 				self.write_form("you already like that post")
 		elif dislike:
+			#dislike article
 			article = Article.get_by_id(int(post_id))
 			if not (str(self.user.get_id()) in article.dislike):
 				article.dislike.append(str(self.user.get_id()))
+				#remove like if user previously dislike article
 				if (str(self.user.get_id()) in article.like):
 					article.like.remove(str(self.user.get_id()))
 				article.put()
@@ -156,15 +160,18 @@ class BlogHandler(Handler):
 			commentdb.put()
 			time.sleep(0.1)
 			self.redirect("/")
-		elif commentupdate:
+		elif submit == 'commentupdate':
+			#update comment
 			self.redirect("/"+comment_id+"/editComment")
-		elif commentdelete:
+		elif submit == 'commentdelete':
+			#delete comment
 			db.delete(Comment.get_by_id(int(comment_id)).key())
 			time.sleep(0.1)
 			self.redirect("/")
 		else:
 			self.redirect("/")
 
+#Post page Handler
 class PostPageHandler(BlogHandler):
 	def get(self, post_id):
 		article = Article.get_by_id(int(post_id))
@@ -174,51 +181,43 @@ class PostPageHandler(BlogHandler):
 		else:
 			self.render("permalink.html", user = self.user, article = article)
 
+#New Post and edit post page Handler
 class NewPostHandler(Handler):
 	def write_form(self, subject = "", content = "", error = ""):
 		self.render("newpost.html", user = self.user, subject = subject, content = content, error = error)
 
-	def get(self):
+	def get(self, post_id = ""):
 		if self.user:
-			self.write_form()
+			#edit post case
+			if post_id is not "":
+				article = Article.get_by_id(int(post_id))
+				self.write_form(subject = article.subject, content = article.content.replace('<br>', '\n'))
+			else:
+				#new post case
+				self.write_form()
 		else:
 		    self.redirect("/login")
 
-	def post(self):
+	def post(self, post_id=""):
 		subject = self.request.get('subject')
 		content = self.request.get('content')
 
 		if subject and content:
-			article = Article(subject = subject, content = content.replace('\n', '<br>'), userid = self.user.get_id())
-			article.put()
-			self.redirect('/'+ str(article.key().id()))
-		else:
-			error = "we need both a subject and some content"
-			self.write_form(subject, content, error)
-
-class EditPostHandler(NewPostHandler):
-	def get(self, post_id):
-		if self.user:
-			if post_id is not None:
+			#edit post case
+			if post_id is not "":
 				article = Article.get_by_id(int(post_id))
-				self.write_form(subject = article.subject, content = article.content.replace('<br>', '\n'))
-		else:
-		    self.redirect("/login")
-
-	def post(self, post_id):
-		subject = self.request.get('subject')
-		content = self.request.get('content').replace('\n', '<br>')
-
-		if subject and content:
-			article = Article.get_by_id(int(post_id))
-			article.subject = subject
-			article.content = content
+				article.subject = subject
+				article.content = content.replace('\n', '<br>')
+			else:
+				#new post case
+				article = Article(subject = subject, content = content.replace('\n', '<br>'), userid = self.user.get_id())
 			article.put()
 			self.redirect('/'+ str(article.key().id()))
 		else:
 			error = "we need both a subject and some content"
 			self.write_form(subject, content, error)
 
+#edit comment page handler
 class EditCommentHandler(Handler):
 	def get(self, comment_id):
 		if self.user:
@@ -238,7 +237,7 @@ class EditCommentHandler(Handler):
 			error = "we need some content"
 			self.render("newcomment.html", user = self.user, content = content, comment_id = comment_id, error = error)
 
-
+#signup page handler
 class SignupHandler(Handler):
 	def write_form(self, name = "", password = "", verify = "", email = "", 
 		error_username = "", error_password = "", error_verify = "", 
@@ -262,6 +261,7 @@ class SignupHandler(Handler):
 		error_verify = ''
 		error_email = ''
 		
+		#verufy all parameters
 		if not(valid_username(user_name)):
 			error_username = 'invalid username'
 			user_name = ''
@@ -281,6 +281,7 @@ class SignupHandler(Handler):
 			user_name = ''
 
 		if not(error_username or error_email or error_verify or error_password):
+			#if no error, create new user account
 			u = User(username = user_name, password = make_pw_hash(user_name, user_password), email = user_email)
 			u.put()
 			self.set_cookie('userId', make_secure_val(str(u.key().id())))
@@ -290,6 +291,7 @@ class SignupHandler(Handler):
 				user_verify, user_email, error_username, 
 				error_password, error_verify, error_email)
 
+#login page handler
 class LoginHandler(Handler):
 	def write_form(self, error = ""):
 		self.render("login.html", user = self.user, error = error)
@@ -309,12 +311,14 @@ class LoginHandler(Handler):
 				return
 		self.write_form("invalid login")
 
+#logout page handler
 class LogoutHandler(Handler):
 	def get(self):
+		#delete the userid cookie to logout
 		self.set_cookie('userId', '')
 		self.redirect("/signup")		
 
-
+#general methods section
 def render_str(template, **params):
     t = jinja_env.get_template(template)
     return t.render(params)
@@ -364,7 +368,7 @@ def check_secure_val(h):
 app = webapp2.WSGIApplication([
 	('/', BlogHandler),
 	('/newpost', NewPostHandler),
-	('/([0-9]+)/editPost', EditPostHandler),
+	('/([0-9]+)/editPost', NewPostHandler),
 	('/([0-9]+)', PostPageHandler),
 	('/([0-9]+)/editComment', EditCommentHandler),
 	('/signup', SignupHandler),
