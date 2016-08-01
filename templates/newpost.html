@@ -1,7 +1,11 @@
 {% extends "base.html" %}
 
 {% block content %}
+	{% if edit %}
+		<h1>Edit Post</h1>
+	{% else %}
 		<h1>New Post</h1>
+	{% endif %}
 
 		<form method = "post">
 			<label>
@@ -14,6 +18,7 @@
 				<textarea name ="content">{{content}}</textarea>
 			</label>
 			<div class="error">{{error}}</div>
-			<input type="submit">
+			<input type="submit" name="newpost">
+			<input type="submit" name="newpost" value="Cancel">
 		</form>
 {% endblock %}
